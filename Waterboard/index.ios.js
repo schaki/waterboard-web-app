@@ -18,15 +18,19 @@ var {
 } = React;
 
 var Waterboard = React.createClass({
-  updateDevices: function(devices){
-    this.setState({devices: devices});
-  },
   getInitialState: function(){
     return {
       isLoggedIn: false,
       devices: [],
-      token: null
+      token: null,
+      device: null
     };
+  },
+  updateDevices: function(devices){
+    this.setState({devices: devices});
+    if (devices && devices.length === 1){
+      this.setState({device: devices[0]});
+    }
   },
   getDevices: function(){
     return particleRequest.getDevices(this.updateDevices);
@@ -40,12 +44,11 @@ var Waterboard = React.createClass({
     return (
       <View style={styles.container}>
         <Text style={styles.welcome} onPress={this.onPressText}>
-          Things!
+          Retrieve Status
         </Text>
         { (devices && devices.length > 0)  ?
           _.map(devices, function(device){
-            console.log(device);
-            return <Text key={device.id}>{device.name}</Text>;
+            return <Text style={styles.device} key={device.id}>{device.name}</Text>;
           }) : null }
       </View>
     );
@@ -57,18 +60,24 @@ var styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
   welcome: {
     fontSize: 20,
     textAlign: 'center',
+    margin: 10
+  },
+  device: {
+    fontSize: 20,
+    textAlign: 'center',
     margin: 10,
+    color: '#0097FF'
   },
   instructions: {
     textAlign: 'center',
     color: '#333333',
-    marginBottom: 5,
-  },
+    marginBottom: 5
+  }
 });
 
 AppRegistry.registerComponent('Waterboard', () => Waterboard);
