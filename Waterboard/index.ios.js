@@ -7,8 +7,10 @@
 var React = require('react-native');
 var spark = require('spark');
 var _ = require('lodash');
+var bluebird = require('bluebird');
 var accessToken = '1fe2165bdc3b1ddd2407399c0cf9716a8a3bbec4';
-var particleRequest = require('./particle-request.js');
+var particle = require('./particle-request.js');
+var deviceId = '190025001047343432313031';
 
 var {
   AppRegistry,
@@ -33,23 +35,67 @@ var Waterboard = React.createClass({
     }
   },
   getDevices: function(){
-    return particleRequest.getDevices(this.updateDevices);
+    return particle.getDevices().then(this.updateDevices);
+  },
+  getSoilMoisture: function(){
+    return particle.getVariable(deviceId,'moisture');
+  },
+  getRainStatus: function(){
+    return particle.getVariable(deviceId,'wet');
+  },
+  getWaterLevel: function(){
+    return particle.getVariable(deviceId,'waterlevel');
+  },
+  getPumpStatus: function(){
+    return particle.getVariable(deviceId,'pumpstatus');
+  },
+  getLight: function(){
+    return particle.getVariable(deviceId,'light');
+  },
+  setPump: function(){
+    return particle.executeFunction(deviceId,'pump');
+  },
+  getAllValues: function(){
+    console.log('getAllValues');
+    return bluebird.all([
+        this.getSoilMoisture(),
+        this.getRainStatus(),
+        this.getWaterLevel(),
+        this.getPumpStatus(),
+        this.getLight()
+      ]
+    ).bind(this).spread(function(soilMoisture, rainStatus, waterLevel, pumpStatus, lightStatus){
+      this.setState({
+        soilMoisture: soilMoisture && soilMoisture.result,
+        rainStatus: rainStatus && rainStatus.result,
+        waterLevel: waterLevel && waterLevel.result,
+        pumpStatus: pumpStatus && pumpStatus.result,
+        lightStatus: lightStatus && lightStatus.result
+      });
+    }).catch(function(error){
+      console.log('error when retrieving all values: ', error);
+    });
   },
   onPressText: function(e){
-    var self = this;
-    return spark.login({accessToken: accessToken}).then(self.getDevices());
+    return spark.login({accessToken: accessToken})
+      // .then(this.getDevices)
+      .then(this.getAllValues);
   },
   render: function() {
-    var devices = this.state.devices;
+    var state = this.state;
     return (
       <View style={styles.container}>
         <Text style={styles.welcome} onPress={this.onPressText}>
           Retrieve Status
         </Text>
-        { (devices && devices.length > 0)  ?
-          _.map(devices, function(device){
-            return <Text style={styles.device} key={device.id}>{device.name}</Text>;
-          }) : null }
+        <Text style={styles.device} key={deviceId + 'moisture'}>Moisture: {state.soilMoisture}</Text>
+        <Text style={styles.device} key={deviceId + 'rain'}>Rain Status: {state.rainStatus}</Text>
+        <Text style={styles.device} key={deviceId + 'waterlevel'}>Water Level: {state.waterLevel}</Text>
+        <Text style={styles.device} key={deviceId + 'pumpstatus'}>Pump Status: {state.pumpStatus}</Text>
+        { (!parseInt(state.rainStatus, 10) && (parseInt(state.soilMoisture, 10) < 1250) && (parseInt(state.waterlevel, 10) > 20)) ?
+          <Text style={styles.welcome} key={deviceId + 'action'}>Start Pump</Text> :
+          <Text style={styles.welcome} key={deviceId + 'action'}>You Can Wait to Water</Text>
+        }
       </View>
     );
   }
