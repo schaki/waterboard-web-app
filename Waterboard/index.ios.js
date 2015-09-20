@@ -53,7 +53,8 @@ var Waterboard = React.createClass({
     return particle.getVariable(deviceId,'light');
   },
   setPump: function(){
-    return particle.executeFunction(deviceId,'pump');
+    var pumpState = this.state.pumpStatus;
+    return particle.executeFunction(deviceId,'pump', pumpState ? "off" : "on");
   },
   getAllValues: function(){
     console.log('getAllValues');
@@ -85,16 +86,20 @@ var Waterboard = React.createClass({
     var state = this.state;
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome} onPress={this.onPressText}>
+        <Text style={styles.actionButton} onPress={this.onPressText}>
           Retrieve Status
         </Text>
         <Text style={styles.device} key={deviceId + 'moisture'}>Moisture: {state.soilMoisture}</Text>
         <Text style={styles.device} key={deviceId + 'rain'}>Rain Status: {state.rainStatus}</Text>
         <Text style={styles.device} key={deviceId + 'waterlevel'}>Water Level: {state.waterLevel}</Text>
         <Text style={styles.device} key={deviceId + 'pumpstatus'}>Pump Status: {state.pumpStatus}</Text>
-        { (!parseInt(state.rainStatus, 10) && (parseInt(state.soilMoisture, 10) < 1250) && (parseInt(state.waterlevel, 10) > 20)) ?
-          <Text style={styles.welcome} key={deviceId + 'action'}>Start Pump</Text> :
+        { (!parseInt(state.rainStatus, 10) && (parseInt(state.soilMoisture, 10) < 1250) && (parseInt(state.waterLevel, 10) > 20)) ?
+          <Text style={styles.actionButton} key={deviceId + 'action'} onPress={this.setPump}>Start Pump</Text> :
           <Text style={styles.welcome} key={deviceId + 'action'}>You Can Wait to Water</Text>
+        }
+        {
+          state.pumpStatus ?
+          <Text style={styles.actionButton} key={deviceId + 'stop'} onPress={this.setPump}>Stop Pump</Text> : null
         }
       </View>
     );
@@ -123,6 +128,13 @@ var styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333333',
     marginBottom: 5
+  },
+  actionButton: {
+    backgroundColor: '#0097FF',
+    fontSize: 20,
+    padding: 10,
+    borderRadius: 5,
+    textAlign: 'center'
   }
 });
 
