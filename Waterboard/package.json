@@ -1,0 +1,19 @@
+{
+  "name": "Waterboard",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node_modules/react-native/packager/packager.sh"
+  },
+  "dependencies": {
+    "bluebird": "^2.10.0",
+    "events": "^1.0.2",
+    "fs": "0.0.2",
+    "lodash": "^3.10.1",
+    "path": "^0.12.7",
+    "react-native": "^0.11.0",
+    "request": "^2.62.0",
+    "spark": "^1.0.0",
+    "util": "^0.10.3"
+  }
+}
